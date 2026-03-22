@@ -1,28 +1,91 @@
-# 项目路线图 & 后续计划 (Roadmap)
+# Roadmap — Soar AI
 
-## 第一阶段：MVP 完善 (当前阶段)
-- [x] 核心 UI 复刻及前后端架构搭建。
-- [x] 任务完成状态的持久化 API。
-- [x] 响应式布局基础优化。
-- [x] Docker 一键部署配置。
+## Current State (v0.1 — March 2026)
 
-## 第二阶段：功能深化 (Q2 2026)
-- **真实数据库接入**: 将当前的 Mock 数据迁移至 PostgreSQL 持久化存储。
-- **用户认证系统**: 增加登录/注册功能，支持多用户。
-- **后台管理系统**: 提供可视化界面用于发布每日任务。
-- **移动端适配**: 深度优化移动端交互，考虑 PWA 方案以便用户在手机端打卡。
+### Done
+- [x] Next.js 14 App Router frontend
+- [x] Supabase Google OAuth login (Google provider)
+- [x] OS-style desktop: draggable icons, stackable windows, maximize/minimize
+- [x] Window titlebar: double-click to maximize, traffic-light controls
+- [x] Bottom taskbar for minimized windows
+- [x] Light / Dark theme (CSS custom properties, `data-theme` on `<html>`)
+- [x] EN / ZH language switching (dropdown, click-outside to close)
+- [x] OS ↔ Web mode toggle (via AppContext)
+- [x] Settings panel: Windows Start-menu style, fixed bottom-left, click-outside to dismiss
+- [x] `home.mdx` auto-opens on desktop load (product landing page)
+- [x] "Get Started" / "立即开始" login button in top-right nav
+- [x] "Soar AI" logo in Playfair Display italic (EN), Noto Serif SC (ZH)
+- [x] AppShell web layout (sidebar + main content)
+- [x] Mock data: profile, tasks, group, stats
+- [x] Python FastAPI backend skeleton (mock data, port 8000)
+- [x] Go Gin backend skeleton (knowledge graph, port 8080)
+- [x] Docker Compose 4-service setup (db / api / pathway / frontend)
+- [x] PostgreSQL schema with pgvector + seed data (8 AI evolution nodes)
 
-## 第三阶段：AI 深度集成 (Q3 2026)
-- **自动改写验证**: 集成 LLM API，对用户提交的任务反馈进行自动评估或辅助改进。
-- **智能任务定制**: 根据用户的职业测评数据，利用 AI 动态生成个性化的转型任务。
-- **AI 助手**: 在任务面板增加悬浮 AI 导师，实时解答任务实践中的问题。
+### Known gaps
+- [ ] `completeTask` still calls real backend — will 500 if Python not running
+- [ ] All data is mock — no real DB reads/writes
+- [ ] No user-specific data (everyone sees same mock profile)
 
-## 第四阶段：社交与激励 (Q4 2026)
-- **勋章系统**: 细化技能解锁路径，增加 3D 效果的成就勋章。
-- **组内即时通讯**: 增加小组内的即时讨论功能，方便分享 Prompt 心得。
-- **企业版方案**: 开发支持团队/企业维度的 AI 转型看板，帮助管理者看清团队 AI 潜力。
+---
 
-## 待办清单 (Short-term TODO)
-- [ ] 优化前端 ECharts/Recharts 替代部分 SVG 硬编码图表。
-- [ ] 增加全局加载动画及平滑的骨架屏。
-- [ ] 支持多语言 (i18n) 切换。
+## v0.2 — Real Data Layer (Q2 2026)
+
+- [ ] Connect Python backend to Supabase PostgreSQL
+- [ ] User-specific profile stored in DB (linked to Supabase auth UID)
+- [ ] Tasks stored and served from DB
+- [ ] Task completion persisted per user
+- [ ] Group membership and leaderboard from DB
+- [ ] Replace mock `completeTask` with real API call
+
+---
+
+## v0.3 — Knowledge Graph (Q2–Q3 2026)
+
+- [ ] Go backend: seed initial AI pathway nodes (Prompt → Context → Harness Engineering)
+- [ ] Frontend: interactive pathway visualization (SVG or canvas)
+- [ ] Tech Radar view (circular, distance = maturity)
+- [ ] Role-based node filtering
+- [ ] Admin panel: add new nodes, define lineage relationships
+- [ ] pgvector: embed node descriptions for semantic search
+
+---
+
+## v0.4 — Mobile & PWA (Q3 2026)
+
+- [ ] Responsive layout for mobile (Web mode only on small screens)
+- [ ] PWA manifest + service worker for offline task viewing
+- [ ] Push notifications for daily task reminder
+
+---
+
+## v0.5 — AI Integration (Q3–Q4 2026)
+
+- [ ] LLM-powered task feedback evaluation
+- [ ] Personalized task generation based on user profile + history
+- [ ] In-window AI assistant (floating chat within task window)
+- [ ] Auto-generate quarterly report narrative with LLM
+
+---
+
+## v1.0 — Social & Enterprise (Q4 2026)
+
+- [ ] Group chat within accountability groups
+- [ ] Achievement badges with unlock animations
+- [ ] Shareable quarterly report (public URL + PDF)
+- [ ] Enterprise dashboard: team-level AI readiness view
+- [ ] Subscription / payment integration
+
+---
+
+## Infrastructure Scaling Triggers
+
+Add these when the 3-service setup (frontend + api + db) is no longer enough:
+
+| When | Add |
+|---|---|
+| Task generation is async / slow | Celery worker + Redis queue |
+| Static assets need CDN | Nginx reverse proxy, frontend as build artifact |
+| Session/rate-limit caching | Redis cache layer |
+| High-volume event tracking | Message queue (RabbitMQ / Kafka) |
+| Vector search at scale | Dedicated pgvector replica or Qdrant |

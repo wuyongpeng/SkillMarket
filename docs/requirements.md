@@ -1,36 +1,92 @@
-# 需求文档 - 起飞AI (AI Transformation OS)
+# Requirements — Soar AI
 
-## 1. 项目背景
-“起飞AI”是一款旨在帮助职场人士（如产品经理、设计师等）从传统工作流转型为 AI 增强型工作流的工具系统。通过每日微任务、成长追踪和小组竞争，降低学习 AI 的门槛，并将其系统化地整合到日常工作中。
+## 1. Background
 
-## 2. 核心功能需求
+Soar AI (起飞AI) is an AI transformation OS for professionals. The core insight: most people know AI tools exist but haven't integrated them into their actual workflow. Soar AI solves this through daily micro-tasks, accountability groups, and progress tracking — not tutorials or tool lists.
 
-### 2.1 任务系统 (Today Page)
-- **每日任务**: 每天推送一个 5-10 分钟可完成的 AI 实践任务（如：用 AI 写会议纪要、改写需求等）。
-- **任务详情**: 包含任务标题、标签、预计时长、所需工具（Claude/ChatGPT）及详细步骤。
-- **任务交互**: 支持标记完成，完成后实时更新连续打卡天数和累计任务数。
-- **打卡历**: 展示本月打卡情况，区分已完成、今日、未完成和未来。
+Target users: product managers, designers, analysts, consultants — knowledge workers who want to stay relevant as AI reshapes their roles.
 
-### 2.2 成长档案 (Profile Page)
-- **AI 就绪度评分**: 通过环形图展示当前评分，并记录入测至今的评分变化情况。
-- **转型阶段轨迹**: 展示用户从“AI 观望者”到“AI 增强专家”的 4 个阶段及当前进度。
-- **技能标签云**: 解锁已掌握的 AI 技能标签（如：Prompt 设计、竞品研究等）。
-- **常用工具统计**: 统计各 AI 工具（Claude, ChatGPT, Midjourney）的使用频率。
+## 2. Core Features
 
-### 2.3 小组系统 (Group Page)
-- **小组排名**: 展示组内成员的本周排名、连续打卡天数及本周完成情况。
-- **动态流**: 实时展示组员成就（如：连续 30 天打卡）或系统提醒。
-- **匿名统计**: 以表格形式展示小组成员的周完成趋势（保持隐私）。
+### 2.1 Daily Task System
 
-### 2.4 季度报告 (Report Page)
-- **数据汇总**: 汇总单季度的任务完成数、评分提升值及同业超越比例。
-- **趋势分析**: 可视化展示任务完成趋势图和 AI 就绪度变化曲线。
-- **分享功能**: 支持生成专属报告链接及下载 PDF。
+- One task per day, completable in 5–10 minutes
+- Tasks are role-specific (PM, designer, analyst, etc.)
+- Each task includes: title, tags, estimated time, required tools, step-by-step instructions
+- Mark complete → updates streak counter and total task count
+- Monthly calendar view showing completed / today / future days
 
-### 2.5 职业测评 (Onboarding)
-- **引导流程**: 通过 5 个环节的问答（领域、年限、使用频率、焦虑点）生成初始 AI 就绪度评分。
+### 2.2 AI Readiness Score
 
-## 3. 非功能需求
-- **视觉体验**: 采用现代、高端的设计语言（Noto Serif SC 字体、莫兰迪色系、毛玻璃效果）。
-- **用户体验**: 响应式布局，平滑的页面切换动画及微交互反馈。
-- **技术架构**: 前后端分离，支持容器化部署。
+- Baseline score from onboarding assessment
+- Score updates as tasks are completed
+- Ring chart visualization with score history
+- Comparison against peers in same industry/role
+
+### 2.3 Growth Profile
+
+- 4-stage transformation timeline: Observer → Daily User → Collaborator → AI-Enhanced Expert
+- Unlockable skill tags (e.g. "Prompt Design", "Meeting Notes", "Data Analysis")
+- Joined days counter, streak records
+
+### 2.4 Group System
+
+- 5-person accountability groups
+- Weekly leaderboard by streak length
+- Activity feed: achievements, warnings for inactive members
+- Weekly dot grid showing each member's 5-day completion
+
+### 2.5 Quarterly Report
+
+- Summary: tasks completed, score gain, percentile vs peers
+- Shareable report (future: PDF export, shareable link)
+
+### 2.6 AI Evolution Path (Knowledge Graph)
+
+- Visual map of AI concepts from foundational to cutting-edge
+- Node maturity labels: Foundational / Mainstream / Emerging / Speculative
+- Lineage relationships (e.g. Prompt Engineering → Context Engineering → Harness Engineering)
+- "2026 New" highlight with breathing animation for latest concepts
+- Role-based filtering (developer / architect / PM)
+
+### 2.7 OS Desktop UI
+
+- Icon-based desktop with draggable windows
+- Double-click icon to open window
+- Multiple windows open simultaneously, stackable by z-index
+- Window controls: close / minimize / maximize (double-click titlebar)
+- Minimized windows in bottom taskbar
+- Draggable icons
+
+### 2.8 Settings & Personalization
+
+- Language: English / 中文
+- Theme: Light / Dark
+- View mode: OS / Web
+- Settings panel: Windows Start-menu style, bottom-left
+
+### 2.9 Authentication
+
+- Google OAuth via Supabase
+- Session persisted server-side (Next.js middleware)
+- Logged-in users get OS mode by default
+- Guest users can browse desktop but can't access personal data
+
+## 3. Non-Functional Requirements
+
+| Requirement | Target |
+|---|---|
+| First load | < 2s on broadband |
+| Auth redirect | < 3s round-trip |
+| Animation | 60fps drag interactions |
+| Accessibility | Keyboard navigable windows |
+| Security | `.env.local` never committed; Supabase RLS for user data |
+| Deployment | Single `docker-compose up` for full stack |
+
+## 4. Out of Scope (v1)
+
+- Mobile / responsive layout (desktop-first)
+- Real-time group chat
+- PDF report export
+- AI-generated personalized tasks
+- Payment / subscription

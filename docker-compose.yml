@@ -1,30 +1,32 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  backend:
-    build: ./backend
+  # Python FastAPI — 主应用接口 (profile / tasks / group / stats)
+  api:
+    build: ./backend/python
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ALLOWED_ORIGIN: http://localhost:3000
     ports:
       - "8000:8000"
+
+  # Go Gin — 知识图谱 + 向量化 (pathway / nodes / lineages)
+  pathway:
+    build: ./backend/go
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/skillmarket
-    depends_on:
-      - db
+      DATABASE_URL: ${DATABASE_URL}
+      ALLOWED_ORIGIN: http://localhost:3000
+      PORT: "8080"
+    ports:
+      - "8080:8080"
 
   frontend:
     build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
-  db:
-    image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=skillmarket
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+      - pathway
