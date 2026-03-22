@@ -8,19 +8,11 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      // Go backend — 知识图谱 (必须在 /api 通配符之前)
-      {
-        source: '/api/pathway',
-        destination: 'http://127.0.0.1:8080/api/pathway',
-      },
-      {
-        source: '/api/nodes',
-        destination: 'http://127.0.0.1:8080/api/nodes',
-      },
-      {
-        source: '/api/lineages',
-        destination: 'http://127.0.0.1:8080/api/lineages',
-      },
+      // Go backend — 知识图谱 (暂时禁用)
+      // { source: '/api/pathway', destination: 'http://127.0.0.1:8080/api/pathway' },
+      // { source: '/api/nodes', destination: 'http://127.0.0.1:8080/api/nodes' },
+      // { source: '/api/lineages', destination: 'http://127.0.0.1:8080/api/lineages' },
+
       // Python backend — 主应用 (profile / tasks / group / stats)
       {
         source: '/api/:path*',

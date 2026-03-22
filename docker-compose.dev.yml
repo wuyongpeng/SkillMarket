@@ -11,15 +11,16 @@ services:
     ports:
       - "8000:8000"
 
-  pathway:
-    build: ./backend/go
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      ALLOWED_ORIGIN: http://localhost:3000
-      PORT: "8080"
-    ports:
-      - "8080:8080"
+  # pathway (Go) — 暂时禁用，内存占用过高
+  # pathway:
+  #   build: ./backend/go
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     ALLOWED_ORIGIN: http://localhost:3000
+  #     PORT: "8080"
+  #   ports:
+  #     - "8080:8080"
 
   frontend:
     build:
@@ -35,4 +36,3 @@ services:
       - "3000:3000"
     depends_on:
       - api
-      - pathway

@@ -10,15 +10,16 @@ services:
     ports:
       - "8000:8000"
 
-  pathway:
-    image: ghcr.io/${GITHUB_REPOSITORY}/pathway:latest
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://skillmarket.top}
-      PORT: "8080"
-    ports:
-      - "8080:8080"
+  # pathway (Go) — 暂时禁用，内存占用过高
+  # pathway:
+  #   image: ghcr.io/${GITHUB_REPOSITORY}/pathway:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://skillmarket.top}
+  #     PORT: "8080"
+  #   ports:
+  #     - "8080:8080"
 
   frontend:
     image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
@@ -30,4 +31,3 @@ services:
       - "3000:3000"
     depends_on:
       - api
-      - pathway
