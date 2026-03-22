@@ -1,4 +1,4 @@
-# Soar AI · 起飞AI
+# Soar AI
 
 > AI Transformation OS — helping every professional master AI, one day at a time.
 
