@@ -1,7 +1,10 @@
 FROM golang:1.22-alpine AS builder
 WORKDIR /app
+
+# Install git (needed by go mod tidy to fetch deps)
+RUN apk add --no-cache git
+
 COPY go.mod ./
-RUN go mod download
 COPY . .
 RUN go mod tidy && go build -o server ./cmd/server
 
