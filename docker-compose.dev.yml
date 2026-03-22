@@ -1,27 +1,32 @@
 version: "3.9"
 
+# 本地开发：从源码构建，不依赖 GHCR 镜像
 services:
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY}/api:latest
+    build: ./backend/python
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://skillmarket.top}
+      ALLOWED_ORIGIN: http://localhost:3000
     ports:
       - "8000:8000"
 
   pathway:
-    image: ghcr.io/${GITHUB_REPOSITORY}/pathway:latest
+    build: ./backend/go
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://skillmarket.top}
+      ALLOWED_ORIGIN: http://localhost:3000
       PORT: "8080"
     ports:
       - "8080:8080"
 
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
