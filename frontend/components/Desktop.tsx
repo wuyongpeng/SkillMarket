@@ -584,10 +584,6 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
               <LogIn size={13} /> {t('立即开始', 'Get Started')}
             </button>
           )}
-          <div className="mode-toggle">
-            <button className={`mode-btn ${mode === 'os' ? 'active' : ''}`} onClick={() => setMode('os')}><Monitor size={13} /> OS</button>
-            <button className={`mode-btn ${mode === 'web' ? 'active' : ''}`} onClick={() => setMode('web')}><Globe size={13} /> Web</button>
-          </div>
           <button className="nav-icon-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('切换主题', 'Toggle theme')}>
             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>

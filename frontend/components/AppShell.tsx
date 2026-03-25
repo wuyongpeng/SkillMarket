@@ -84,8 +84,18 @@ export default function AppShell({ user }: { user: User }) {
               }
             </div>
             {showUserMenu && (
-              <div style={{ position: 'absolute', bottom: 40, left: 0, background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 10, padding: '6px 0', minWidth: 160, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 999 }}>
+              <div style={{ position: 'absolute', bottom: 40, left: -8, width: 160, background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 10, padding: '6px 0', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 999 }}>
                 <div style={{ padding: '8px 14px', fontSize: 12, color: 'var(--muted)', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>{displayName}</div>
+                {/* mode switch */}
+                <div style={{ padding: '6px 14px 2px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('视图模式', 'View Mode')}</div>
+                <div style={{ display: 'flex', gap: 6, padding: '4px 14px 8px', borderBottom: '1px solid var(--border)' }}>
+                  <button onClick={() => setMode('os')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 0', borderRadius: 6, border: '1px solid var(--border2)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--muted)', fontFamily: 'inherit' }}>
+                    <Monitor size={13} /> OS
+                  </button>
+                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 0', borderRadius: 6, border: '1px solid var(--teal)', background: 'var(--teal-light)', cursor: 'default', fontSize: 12, fontWeight: 600, color: 'var(--teal)', fontFamily: 'inherit' }}>
+                    <Globe size={13} /> Web
+                  </button>
+                </div>
                 <button
                   onClick={handleSignOut}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--ink)', fontFamily: 'inherit' }}
@@ -108,10 +118,6 @@ export default function AppShell({ user }: { user: User }) {
           {/* spacer matches OS mode logo width so controls stay in same position */}
           <div style={{ marginRight: 'auto' }} />
           <div className="nav-right-controls" style={{ marginLeft: 0 }}>
-            <div className="mode-toggle">
-              <button className="mode-btn" onClick={() => setMode('os')}><Monitor size={13} /> OS</button>
-              <button className="mode-btn active"><Globe size={13} /> Web</button>
-            </div>
             <button className="nav-icon-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('切换主题', 'Toggle theme')}>
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
