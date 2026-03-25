@@ -4,9 +4,9 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { useSpring, animated } from '@react-spring/web'
 import {
-  Calendar, User, Users, FileText, Zap, LogIn,
+  Telescope, LayoutGrid, Bot, Cpu, Server, LogIn, LogOut,
   X, Minus, Maximize2, Sun, Moon, Languages, Monitor, Globe,
-  Flame, ArrowRight, Settings
+  Settings
 } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import Image from 'next/image'
@@ -20,7 +20,7 @@ interface AppWindow {
   x: number; y: number; w: number; h: number; z: number; minimized: boolean
 }
 interface DesktopIcon {
-  id: string; label: string; fileExt: string; icon: React.ReactNode
+  id: string; label: string; icon: React.ReactNode
   color: string; content: React.ReactNode; defaultW: number; defaultH: number
 }
 
@@ -29,43 +29,97 @@ let globalZ = 100
 /* ─────────────────────────────────────
    Window Frame
 ───────────────────────────────────── */
-function AppWindowFrame({ win, onClose, onFocus, onMinimize }: {
+function AppWindowFrame({ win, onClose, onFocus, onMinimize, onResize }: {
   win: AppWindow; onClose: (id: string) => void
   onFocus: (id: string) => void; onMinimize: (id: string) => void
+  onResize: (id: string, x: number, y: number, w: number, h: number) => void
 }) {
-  const pos = useRef({ x: win.x, y: win.y })
-  const [maximized, setMaximized] = useState(false)
-  const [style, api] = useSpring(() => ({ x: win.x, y: win.y, config: { tension: 280, friction: 28 } }))
+  // local state owns position + size — never reset by parent re-renders
+  const [rect, setRect] = useState({ x: win.x, y: win.y, w: win.w, h: win.h })
+  const rectRef = useRef(rect)
+  rectRef.current = rect
 
+  const [maximized, setMaximized] = useState(false)
+
+  // drag to move (titlebar)
   const bind = useDrag(({ movement: [mx, my], first, last, event }) => {
     if (maximized) return
     const target = event?.target as HTMLElement
     if (!target?.closest('.win-titlebar')) return
     if (first) onFocus(win.id)
-    const x = Math.max(0, pos.current.x + mx)
-    const y = Math.max(0, pos.current.y + my)
-    if (last) pos.current = { x, y }
-    api.start({ x, y, immediate: true })
+    const base = rectRef.current
+    const x = Math.max(0, base.x + mx)
+    const y = Math.max(0, base.y + my)
+    setRect(r => ({ ...r, x, y }))
+    if (last) onResize(win.id, x, y, base.w, base.h)
   }, { filterTaps: true })
 
+  // resize from a given edge/corner
+  function makeResizeBind(edges: { left?: boolean; right?: boolean; top?: boolean; bottom?: boolean }) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useDrag(({ movement: [mx, my], first, memo, last, event }) => {
+      if (maximized) return
+      event?.stopPropagation()
+      if (first) { onFocus(win.id); return rectRef.current }
+      const base = memo as typeof rect
+      const MIN_W = 280, MIN_H = 180
+
+      let { x, y, w, h } = base
+      if (edges.right)  w = Math.max(MIN_W, base.w + mx)
+      if (edges.bottom) h = Math.max(MIN_H, base.h + my)
+      if (edges.left) {
+        const dw = Math.min(mx, base.w - MIN_W)
+        w = base.w - dw; x = base.x + dw
+      }
+      if (edges.top) {
+        const dh = Math.min(my, base.h - MIN_H)
+        h = base.h - dh; y = base.y + dh
+      }
+
+      setRect({ x, y, w, h })
+      if (last) onResize(win.id, x, y, w, h)
+      return base
+    }, { filterTaps: true })
+  }
+
+  const bindE  = makeResizeBind({ right: true })
+  const bindW  = makeResizeBind({ left: true })
+  const bindS  = makeResizeBind({ bottom: true })
+  const bindN  = makeResizeBind({ top: true })
+  const bindSE = makeResizeBind({ right: true, bottom: true })
+  const bindSW = makeResizeBind({ left: true, bottom: true })
+  const bindNE = makeResizeBind({ right: true, top: true })
+  const bindNW = makeResizeBind({ left: true, top: true })
+
   function handleTitlebarDblClick(e: React.MouseEvent) {
-    if (!(e.target as HTMLElement).closest('.win-controls')) {
-      setMaximized(m => !m)
-    }
+    if (!(e.target as HTMLElement).closest('.win-controls')) setMaximized(m => !m)
   }
 
   const NAV_H = 48
+  const HANDLE = 6
+  const CORNER = 14
+
   if (win.minimized) return null
   return (
-    <animated.div
+    <div
       {...bind()}
       onMouseDown={() => onFocus(win.id)}
       className={`app-window ${maximized ? 'maximized' : ''}`}
       style={maximized
         ? { position: 'fixed', top: NAV_H, left: 0, width: '100vw', height: `calc(100vh - ${NAV_H}px)`, zIndex: win.z, touchAction: 'none' }
-        : { ...style, zIndex: win.z, width: win.w, height: win.h, position: 'absolute', touchAction: 'none' }
+        : { position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex: win.z, touchAction: 'none' }
       }
     >
+      {!maximized && <>
+        <div {...bindE()} style={{ position:'absolute', right:0, top:CORNER, bottom:CORNER, width:HANDLE, cursor:'ew-resize', zIndex:10 }} />
+        <div {...bindW()} style={{ position:'absolute', left:0, top:CORNER, bottom:CORNER, width:HANDLE, cursor:'ew-resize', zIndex:10 }} />
+        <div {...bindS()} style={{ position:'absolute', bottom:0, left:CORNER, right:CORNER, height:HANDLE, cursor:'ns-resize', zIndex:10 }} />
+        <div {...bindN()} style={{ position:'absolute', top:0, left:CORNER, right:CORNER, height:HANDLE, cursor:'ns-resize', zIndex:10 }} />
+        <div {...bindSE()} style={{ position:'absolute', right:0, bottom:0, width:CORNER, height:CORNER, cursor:'nwse-resize', zIndex:11 }} />
+        <div {...bindSW()} style={{ position:'absolute', left:0, bottom:0, width:CORNER, height:CORNER, cursor:'nesw-resize', zIndex:11 }} />
+        <div {...bindNE()} style={{ position:'absolute', right:0, top:0, width:CORNER, height:CORNER, cursor:'nesw-resize', zIndex:11 }} />
+        <div {...bindNW()} style={{ position:'absolute', left:0, top:0, width:CORNER, height:CORNER, cursor:'nwse-resize', zIndex:11 }} />
+      </>}
       <div className="win-titlebar" onDoubleClick={handleTitlebarDblClick}>
         <div className="win-controls">
           <button className="win-btn win-close" onClick={() => onClose(win.id)}><X size={8} /></button>
@@ -75,7 +129,7 @@ function AppWindowFrame({ win, onClose, onFocus, onMinimize }: {
         <div className="win-title">{win.title}</div>
       </div>
       <div className="win-body">{win.content}</div>
-    </animated.div>
+    </div>
   )
 }
 
@@ -114,7 +168,7 @@ function DesktopIconItem({ icon: def, onOpen }: { icon: DesktopIcon; onOpen: (de
       onDoubleClick={() => onOpen(def)}
     >
       <div className="di-icon" style={{ background: def.color }}>{def.icon}</div>
-      <div className="di-label">{def.label}<span className="di-ext">.{def.fileExt}</span></div>
+      <div className="di-label">{def.label}</div>
     </animated.div>
   )
 }
@@ -122,8 +176,18 @@ function DesktopIconItem({ icon: def, onOpen }: { icon: DesktopIcon; onOpen: (de
 /* ─────────────────────────────────────
    Settings Panel (Windows Start-menu style)
 ───────────────────────────────────── */
-function SettingsPanel({ onClose }: { onClose: () => void }) {
+function SettingsPanel({ onClose, user }: { onClose: () => void; user?: import('@supabase/supabase-js').User | null }) {
   const { lang, setLang, theme, setTheme, mode, setMode, t } = useApp()
+
+  async function handleSignOut() {
+    const { createClient } = await import('@/lib/supabase/client')
+    await createClient().auth.signOut()
+    window.location.reload()
+  }
+
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
+  const displayName = (user?.user_metadata?.name as string) || user?.email || ''
+
   return (
     <div className="settings-panel">
       <div className="settings-header">
@@ -160,143 +224,90 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
           <Globe size={13} /> Web
         </button>
       </div>
-    </div>
-  )
-}
 
-/* ─────────────────────────────────────
-   Window Contents
-───────────────────────────────────── */
-function HomeContent({ onLogin }: { onLogin: () => void }) {
-  const { t, lang, setMode } = useApp()
-  return (
-    <div className="wc-home">
-      <div className="wc-home-eyebrow">AI Transformation OS · skillmarket.top</div>
-      <h1 className="wc-home-title">
-        {t('让每个职场人都能驾驭 AI', 'AI Transformation for Every Professional')}
-      </h1>
-      <p className="wc-home-sub">
-        {lang === 'zh'
-          ? <>不是又一个 AI 工具推荐清单。<br />而是一套帮你把 AI 真正用进工作流的<strong>每日训练系统</strong>。</>
-          : <>Not another AI tool list.<br />A <strong>daily training system</strong> that integrates AI into your real workflow.</>
-        }
-      </p>
-      <div className="wc-home-features">
-        {[
-          { icon: '📋', title: t('每日 5 分钟任务', 'Daily 5-min Tasks'), desc: t('根据你的职业角色定制', 'Tailored to your role') },
-          { icon: '🔥', title: t('小组打卡', 'Group Check-in'), desc: t('5 人小组，排行榜，连续打卡', '5-person groups, leaderboard, streaks') },
-          { icon: '📈', title: t('AI 就绪度评分', 'AI Readiness Score'), desc: t('入测 → 持续追踪 → 季度报告', 'Baseline → Track → Quarterly report') },
-          { icon: '🗺️', title: t('AI 进化路径', 'AI Evolution Path'), desc: t('从 Prompt 到 Harness Engineering', 'From Prompt to Harness Engineering') },
-        ].map(f => (
-          <div key={f.title as string} className="wc-home-feature">
-            <div className="wc-home-feature-icon">{f.icon}</div>
-            <div>
-              <div className="wc-home-feature-title">{f.title}</div>
-              <div className="wc-home-feature-desc">{f.desc}</div>
-            </div>
+      {user && (
+        <>
+          <div className="settings-section">{t('账号', 'Account')}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 4px' }}>
+            {avatarUrl
+              ? <Image src={avatarUrl} alt="avatar" width={28} height={28} style={{ borderRadius: '50%', flexShrink: 0 }} />
+              : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff', flexShrink: 0 }}>{displayName[0]?.toUpperCase()}</div>
+            }
+            <span style={{ fontSize: 12, color: 'var(--ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+            <button
+              onClick={handleSignOut}
+              title={t('退出登录', 'Sign out')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4, display: 'flex', alignItems: 'center' }}
+            >
+              <LogOut size={14} />
+            </button>
           </div>
-        ))}
-      </div>
-      <div className="wc-home-stats">
-        <div className="wc-home-stat"><span>94</span>{t('天平均坚持', 'avg days')}</div>
-        <div className="wc-home-stat"><span>68%</span>{t('超越同行', 'beat peers')}</div>
-        <div className="wc-home-stat"><span>+24</span>{t('分平均提升', 'score gain')}</div>
-      </div>
-      <div className="wc-home-actions">
-        <button className="wc-home-btn-primary" onClick={onLogin}>
-          {t('免费开始', 'Get Started Free')} <ArrowRight size={14} />
-        </button>
-        <button className="wc-home-btn-ghost" onClick={() => setMode('web')}>
-          {t('切换到网页模式', 'Switch to Web Mode')}
-        </button>
-      </div>
-      <div className="wc-home-hint">{t('↑ 双击左侧图标，探索各功能模块', '↑ Double-click icons on the left to explore')}</div>
+        </>
+      )}
     </div>
   )
 }
 
-function TodayContent() {
+/* ── FRONTIER ── */
+function FrontierContent() {
   const { t } = useApp()
-  const [done, setDone] = useState(false)
-  return (
-    <div className="wc-today">
-      <div className="wc-section-label">📋 {t('今日任务 · 预计 5 分钟', "Today's Task · ~5 min")}</div>
-      <div className="wc-task-title">{t('用 AI 将你昨天的一段会议纪要，改写成可直接发给老板的结构化决策备忘录', 'Use AI to rewrite your meeting notes into a structured decision memo for your manager')}</div>
-      <div className="wc-tags">
-        <span className="wc-tag">{t('沟通效率', 'Communication')}</span>
-        <span className="wc-tag">{t('文档写作', 'Writing')}</span>
-        <span className="wc-tag">Claude / ChatGPT</span>
-      </div>
-      <div className="wc-steps">
-        {[
-          t('打开 Claude 或 ChatGPT，粘贴你最近一次会议纪要', 'Open Claude or ChatGPT, paste your recent meeting notes'),
-          t('输入 Prompt：「改写为决策备忘录，包含背景、核心决策、负责人与时间节点、风险提示」', 'Prompt: "Rewrite as a decision memo with: background, key decisions, owners, timeline, risks"'),
-          t('对比 AI 输出和你自己写的版本，记录最让你惊喜的一点', 'Compare AI output vs your own version, note the most surprising difference'),
-        ].map((s, i) => (
-          <div className="wc-step" key={i}><div className="wc-step-num">{i + 1}</div><div>{s}</div></div>
-        ))}
-      </div>
-      <button className={`wc-complete-btn ${done ? 'done' : ''}`} onClick={() => setDone(true)} disabled={done}>
-        {done ? `✓ ${t('已完成！', 'Done!')}` : t('标记完成', 'Mark Complete')}
-      </button>
-    </div>
-  )
-}
-
-function ProfileContent({ user }: { user?: SupabaseUser | null }) {
-  const { t } = useApp()
-  const displayName = user?.user_metadata?.name as string || t('访客', 'Guest')
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
-  return (
-    <div className="wc-profile">
-      <div className="wc-score-row">
-        <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="32" fill="none" stroke="#e8e8f0" strokeWidth="6" />
-          <circle cx="40" cy="40" r="32" fill="none" stroke="#048a81" strokeWidth="6"
-            strokeLinecap="round" strokeDasharray="201" strokeDashoffset={201 * 0.29} transform="rotate(-90 40 40)" />
-          <text x="40" y="44" textAnchor="middle" fontSize="20" fontWeight="300" fill="var(--ink)">71</text>
-          <text x="40" y="56" textAnchor="middle" fontSize="9" fill="#8888aa">{t('AI就绪度', 'AI Readiness')}</text>
-        </svg>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {avatarUrl && <Image src={avatarUrl} alt="avatar" width={28} height={28} style={{ borderRadius: '50%' }} />}
-            <div className="wc-profile-name">{displayName}</div>
-          </div>
-          <div className="wc-profile-role">{t('产品经理 · 7年', 'Product Manager · 7yr')}</div>
-          <div className="wc-profile-score">47 → <span>71{t('分', 'pts')}</span> ↑ {t('提升 24 分', '+24 pts')}</div>
-        </div>
-      </div>
-      <div className="wc-skills">
-        {[t('文档写作','Writing'), t('会议纪要','Meeting Notes'), 'Prompt Design', t('数据分析辅助','Data Analysis'), t('产品需求描述','PRD'), t('竞品研究','Competitive Research')].map(s => (
-          <span key={s as string} className="wc-tag">{s}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function GroupContent() {
-  const { t } = useApp()
-  const members = [
-    { name: t('成员 1','Member 1'), color: '#5b4fcf', streak: 31, rank: 1, week: [1,1,1,1,1] },
-    { name: t('你','You'), color: '#048a81', streak: 23, rank: 2, week: [1,1,1,1,1] },
-    { name: t('成员 2','Member 2'), color: '#d4890a', streak: 12, rank: 3, week: [1,1,0,1,1] },
-    { name: t('成员 3','Member 3'), color: '#c94040', streak: 2, rank: 4, week: [1,1,0,0,0] },
-    { name: t('成员 4','Member 4'), color: '#888', streak: 7, rank: 5, week: [1,0,1,0,1] },
+  const tags = [
+    {
+      label: t('新兴范式', 'Emerging'),
+      color: '#5b4fcf',
+      items: ['Mixture of Experts', 'Speculative Decoding', 'Test-Time Compute'],
+    },
+    {
+      label: t('主流应用', 'Mainstream'),
+      color: '#048a81',
+      items: ['RAG', 'Function Calling', 'Fine-tuning'],
+    },
+    {
+      label: t('基础理论', 'Foundation'),
+      color: '#888',
+      items: ['Transformer', 'Backpropagation', 'Tokenization'],
+    },
   ]
-  const me = t('你', 'You')
   return (
-    <div className="wc-group">
-      {members.map(m => (
-        <div key={m.name as string} className="wc-member">
-          <div className="wc-rank">{m.rank}</div>
-          <div className="wc-avatar" style={{ background: m.color }}>{(m.name as string)[0]}</div>
-          <div className="wc-member-info">
-            <div className="wc-member-name">{m.name}{m.name === me && <span className="wc-you"> ({t('我','me')})</span>}</div>
-            <div className="wc-member-streak"><Flame size={10} style={{ color: '#ff6b35' }} /> {t('连续','streak')} {m.streak} {t('天','d')}</div>
+    <div className="wc-today" style={{ padding: '20px' }}>
+      <div className="wc-section-label">{t('前沿探索', 'Frontier')}</div>
+      {tags.map(g => (
+        <div key={g.label as string} style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: g.color, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{g.label}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {g.items.map(item => (
+              <span key={item} className="wc-tag" style={{ borderColor: g.color, color: g.color }}>{item}</span>
+            ))}
           </div>
-          <div className="wc-dots">
-            {m.week.map((d, i) => <div key={i} className="wc-dot" style={{ background: d ? '#048a81' : 'var(--border2)' }} />)}
+        </div>
+      ))}
+      <div style={{ marginTop: 16, padding: '10px 12px', background: 'var(--surface)', borderRadius: 8, fontSize: 11, color: 'var(--muted)' }}>
+        {t('成熟度 · 确定性 · 新鲜度 · 类型', 'maturity · certainty · freshness · type')}
+      </div>
+    </div>
+  )
+}
+
+/* ── APPLICATIONS ── */
+function ApplicationsContent() {
+  const { t } = useApp()
+  const matrix = [
+    { cap: t('生成', 'Generate'),   domains: [t('编程', 'Coding'), t('营销', 'Marketing'), t('教育', 'Education')] },
+    { cap: t('分析', 'Analyze'),    domains: [t('金融', 'Finance'), t('医疗', 'Healthcare'), t('通用', 'General')] },
+    { cap: t('决策', 'Decide'),     domains: [t('金融', 'Finance'), t('通用', 'General')] },
+    { cap: t('执行', 'Act'),        domains: [t('编程', 'Coding'), t('通用', 'General')] },
+    { cap: t('沟通', 'Communicate'), domains: [t('营销', 'Marketing'), t('教育', 'Education')] },
+  ]
+  return (
+    <div className="wc-today" style={{ padding: '20px' }}>
+      <div className="wc-section-label">{t('应用落地', 'Applications')}</div>
+      {matrix.map(row => (
+        <div key={row.cap as string} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div style={{ width: 90, fontSize: 12, fontWeight: 600, color: 'var(--ink)', flexShrink: 0 }}>{row.cap}</div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {(row.domains as string[]).map(d => (
+              <span key={d} className="wc-tag" style={{ fontSize: 10 }}>{d}</span>
+            ))}
           </div>
         </div>
       ))}
@@ -304,39 +315,114 @@ function GroupContent() {
   )
 }
 
-function PathwayContent() {
+/* ── AGENTS ── */
+function AgentsContent() {
   const { t } = useApp()
-  const nodes = [
-    { name: 'Prompt Engineering', desc: t('基础提示词设计', 'Basic prompt design'), status: 'done' },
-    { name: 'Context Engineering', desc: t('上下文窗口管理', 'Context window management'), status: 'done' },
-    { name: 'Harness Engineering', desc: t('约束与编排 AI 行为', 'Constrain & orchestrate AI'), status: 'new' },
+  const sections = [
+    {
+      title: t('决策系统', 'Decision Systems'),
+      items: [t('规划', 'Planning'), t('推理', 'Reasoning'), t('反思', 'Reflection')],
+    },
+    {
+      title: t('架构模式', 'Architectures'),
+      items: ['ReAct', 'Plan-Execute', 'Tree of Thought', 'Self-Refine'],
+    },
+    {
+      title: t('多智能体', 'Multi-Agent'),
+      items: [t('群体协作', 'Swarm'), t('角色分工', 'Role-based'), t('层级结构', 'Hierarchy')],
+    },
+    {
+      title: t('认知建模', 'Cognitive'),
+      items: [t('信念建模', 'Belief Modeling'), t('上下文建模', 'Context Modeling')],
+    },
   ]
   return (
-    <div className="wc-pathway">
-      {nodes.map((n, i) => (
-        <div key={n.name}>
-          <div className={`wc-node ${n.status}`}>
-            <div className="wc-node-name">{n.name}{n.status === 'new' && <span className="wc-new-badge">2026 New</span>}</div>
-            <div className="wc-node-desc">{n.desc}</div>
+    <div className="wc-today" style={{ padding: '20px' }}>
+      <div className="wc-section-label">{t('智能体', 'Agents')}</div>
+      {sections.map(s => (
+        <div key={s.title as string} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 5 }}>{s.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
           </div>
-          {i < nodes.length - 1 && <div className="wc-node-connector">↓</div>}
         </div>
       ))}
     </div>
   )
 }
 
-function ReportContent() {
+/* ── EXECUTION ── */
+function ExecutionContent() {
   const { t } = useApp()
+  const sections = [
+    {
+      title: t('编排', 'Orchestration'),
+      items: [t('工作流', 'Workflow'), 'DAG', t('事件驱动', 'Event')],
+    },
+    {
+      title: t('上下文系统', 'Context Systems'),
+      items: ['RAG', 'Embeddings', 'Vector DB', t('记忆', 'Memory')],
+    },
+    {
+      title: t('驭控工程', 'Harness Engineering'),
+      items: [t('评估', 'Evaluation'), t('反馈循环', 'Feedback Loop'), t('自动调试', 'Auto Debug'), t('约束', 'Constraints')],
+    },
+    {
+      title: t('可观测性', 'Observability'),
+      items: [t('日志', 'Logging'), t('链路追踪', 'Tracing'), t('监控', 'Monitoring'), t('成本', 'Cost')],
+    },
+    {
+      title: t('可靠性', 'Reliability'),
+      items: [t('重试', 'Retry'), t('降级', 'Fallback'), 'Guardrails', t('恢复', 'Recovery')],
+    },
+  ]
   return (
-    <div className="wc-report">
-      <div className="wc-report-header">2026 Q1 · {t('AI 转型成长报告', 'AI Transformation Report')}</div>
-      <div className="wc-report-period">{t('2026年1月 — 3月 · 产品经理', 'Jan — Mar 2026 · Product Manager')}</div>
-      <div className="wc-report-stats">
-        <div className="wc-rs"><div className="wc-rs-val">87</div><div className="wc-rs-key">{t('完成任务数', 'Tasks Done')}</div></div>
-        <div className="wc-rs"><div className="wc-rs-val">+24</div><div className="wc-rs-key">{t('评分提升', 'Score Gain')}</div></div>
-        <div className="wc-rs"><div className="wc-rs-val">68%</div><div className="wc-rs-key">{t('超越同行', 'Beat Peers')}</div></div>
-      </div>
+    <div className="wc-today" style={{ padding: '20px' }}>
+      <div className="wc-section-label">{t('执行层', 'Execution')}</div>
+      {sections.map(s => (
+        <div key={s.title as string} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#048a81', marginBottom: 5 }}>{s.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ── AI INFRASTRUCTURE ── */
+function AIInfraContent() {
+  const { t } = useApp()
+  const sections = [
+    {
+      title: t('基础理论', 'Foundations'),
+      items: ['Transformer', 'MoE', 'Diffusion', 'Backprop', 'Scaling Law', 'Tokenization'],
+    },
+    {
+      title: t('系统', 'Systems'),
+      items: ['vLLM', 'KV Cache', 'Quantization', t('分布式训练', 'Distributed Training'), 'Serverless'],
+    },
+    {
+      title: t('硬件', 'Hardware'),
+      items: ['GPU', 'NPU'],
+    },
+    {
+      title: t('资源', 'Resources'),
+      items: [t('数据集', 'Datasets'), t('基准测试', 'Benchmarks'), t('评估集', 'Eval Sets'), t('提示词库', 'Prompt Libraries'), 'Model Zoo'],
+    },
+  ]
+  return (
+    <div className="wc-today" style={{ padding: '20px' }}>
+      <div className="wc-section-label">{t('AI基础设施', 'AI Infra')}</div>
+      {sections.map(s => (
+        <div key={s.title as string} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 5 }}>{s.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -445,17 +531,13 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
     await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/auth/callback` } })
   }
 
-  // home label changes with language
-  const homeLabel = lang === 'zh' ? '首页' : 'home'
-
   const ICONS: DesktopIcon[] = [
-    { id: 'home', label: homeLabel, fileExt: 'mdx', icon: <FileText size={22} color="#fff" />, color: '#1a1a2e', content: <HomeContent onLogin={handleLogin} />, defaultW: 560, defaultH: 520 },
-    { id: 'today', label: t('今日任务', 'Today'), fileExt: 'md', icon: <Calendar size={22} color="#fff" />, color: '#048a81', content: <TodayContent />, defaultW: 480, defaultH: 420 },
-    { id: 'profile', label: t('成长档案', 'Profile'), fileExt: 'tsx', icon: <User size={22} color="#fff" />, color: '#5b4fcf', content: <ProfileContent user={user} />, defaultW: 400, defaultH: 340 },
-    { id: 'group', label: t('我的小组', 'Group'), fileExt: 'tsx', icon: <Users size={22} color="#fff" />, color: '#d4890a', content: <GroupContent />, defaultW: 380, defaultH: 360 },
-    { id: 'pathway', label: t('AI 路径', 'AI Path'), fileExt: 'go', icon: <Zap size={22} color="#fff" />, color: '#00a8cc', content: <PathwayContent />, defaultW: 360, defaultH: 340 },
-    { id: 'report', label: t('季度报告', 'Report'), fileExt: 'pdf', icon: <FileText size={22} color="#c94040" />, color: '#fdeaea', content: <ReportContent />, defaultW: 400, defaultH: 260 },
-    ...(!user ? [{ id: 'login', label: t('登录', 'Login'), fileExt: 'tsx', icon: <LogIn size={22} color="#fff" />, color: '#1a1a2e', content: <LoginContent />, defaultW: 360, defaultH: 320 }] : []),
+    { id: 'frontier',     label: t('前沿探索', 'Frontier'),          icon: <Telescope size={22} color="#fff" />, color: '#1a1a2e', content: <FrontierContent />,     defaultW: 420, defaultH: 420 },
+    { id: 'applications', label: t('应用落地', 'Applications'),       icon: <LayoutGrid size={22} color="#fff" />, color: '#5b4fcf', content: <ApplicationsContent />, defaultW: 400, defaultH: 360 },
+    { id: 'agents',       label: t('智能体', 'Agents'),               icon: <Bot size={22} color="#fff" />,        color: '#048a81', content: <AgentsContent />,       defaultW: 400, defaultH: 400 },
+    { id: 'execution',    label: t('执行层', 'Execution'),            icon: <Cpu size={22} color="#fff" />,        color: '#d4890a', content: <ExecutionContent />,    defaultW: 420, defaultH: 440 },
+    { id: 'ai-infra',     label: t('AI基础设施', 'AI Infra'),         icon: <Server size={22} color="#fff" />,     color: '#00a8cc', content: <AIInfraContent />,      defaultW: 420, defaultH: 420 },
+    ...(!user ? [{ id: 'login', label: t('登录', 'Login'), icon: <LogIn size={22} color="#fff" />, color: '#1a1a2e', content: <LoginContent />, defaultW: 360, defaultH: 320 }] : []),
   ]
 
   const openWindow = useCallback((def: DesktopIcon) => {
@@ -467,22 +549,25 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
       }
       globalZ += 1
       const offset = prev.filter(w => !w.minimized).length * 28
-      return [...prev, { id: def.id, title: `${def.label}.${def.fileExt}`, content: def.content, x: 120 + offset, y: 60 + offset, w: def.defaultW, h: def.defaultH, z: globalZ, minimized: false }]
+      return [...prev, { id: def.id, title: def.label, content: def.content, x: 120 + offset, y: 60 + offset, w: def.defaultW, h: def.defaultH, z: globalZ, minimized: false }]
     })
   }, [])
 
-  // Auto-open home on mount
+  // Auto-open frontier on mount
   useEffect(() => {
     if (homeOpenedRef.current) return
     homeOpenedRef.current = true
-    const homeDef = ICONS.find(i => i.id === 'home')!
-    openWindow(homeDef)
+    const frontierDef = ICONS.find(i => i.id === 'frontier')!
+    openWindow(frontierDef)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const closeWindow = useCallback((id: string) => setWindows(prev => prev.filter(w => w.id !== id)), [])
   const focusWindow = useCallback((id: string) => { globalZ += 1; setWindows(prev => prev.map(w => w.id === id ? { ...w, z: globalZ } : w)) }, [])
   const minimizeWindow = useCallback((id: string) => setWindows(prev => prev.map(w => w.id === id ? { ...w, minimized: true } : w)), [])
+  const resizeWindow = useCallback((id: string, x: number, y: number, w: number, h: number) => {
+    setWindows(prev => prev.map(win => win.id === id ? { ...win, x, y, w, h } : win))
+  }, [])
 
   return (
     <div className="desktop">
@@ -493,27 +578,16 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
         <div className={`desktop-logo ${lang === 'en' ? 'en' : ''}`}>
           {lang === 'zh' ? '起飞AI' : 'Soar AI'}
         </div>
-        {user && (
-          <div className="desktop-user">
-            {user.user_metadata?.avatar_url && (
-              <Image src={user.user_metadata.avatar_url as string} alt="avatar" width={24} height={24} style={{ borderRadius: '50%' }} />
-            )}
-            <span>{user.user_metadata?.name as string || user.email}</span>
-          </div>
-        )}
         <div className="nav-right-controls">
-          {/* Login button — top-right, only when not logged in */}
           {!user && (
             <button className="nav-login-btn" onClick={handleLogin}>
               <LogIn size={13} /> {t('立即开始', 'Get Started')}
             </button>
           )}
-          {user && (
-            <div className="mode-toggle">
-              <button className={`mode-btn ${mode === 'os' ? 'active' : ''}`} onClick={() => setMode('os')}><Monitor size={13} /> OS</button>
-              <button className={`mode-btn ${mode === 'web' ? 'active' : ''}`} onClick={() => setMode('web')}><Globe size={13} /> Web</button>
-            </div>
-          )}
+          <div className="mode-toggle">
+            <button className={`mode-btn ${mode === 'os' ? 'active' : ''}`} onClick={() => setMode('os')}><Monitor size={13} /> OS</button>
+            <button className={`mode-btn ${mode === 'web' ? 'active' : ''}`} onClick={() => setMode('web')}><Globe size={13} /> Web</button>
+          </div>
           <button className="nav-icon-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('切换主题', 'Toggle theme')}>
             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
@@ -539,13 +613,13 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
       {/* Settings panel — at root level, always on top */}
       {showSettings && (
         <div ref={settingsRef} style={{ position: 'fixed', bottom: 100, left: 16, zIndex: 99999 }}>
-          <SettingsPanel onClose={() => setShowSettings(false)} />
+          <SettingsPanel onClose={() => setShowSettings(false)} user={user} />
         </div>
       )}
 
       {/* Windows */}
       {windows.map(win => (
-        <AppWindowFrame key={win.id} win={win} onClose={closeWindow} onFocus={focusWindow} onMinimize={minimizeWindow} />
+        <AppWindowFrame key={win.id} win={win} onClose={closeWindow} onFocus={focusWindow} onMinimize={minimizeWindow} onResize={resizeWindow} />
       ))}
 
       {/* Taskbar */}
