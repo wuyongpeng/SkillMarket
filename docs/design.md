@@ -1,5 +1,14 @@
 # Design & Architecture — Soar AI
 
+> **版本历史**
+> | 版本 | 日期 | 变更摘要 |
+> |------|------|---------|
+> | v0.3 | 2026-03-26 | AI Knowledge OS v4 架构重构：五层导航、i18n 完善、Web 模式重写、OS 窗口缩放 |
+> | v0.2 | 2026-03 | AppShell web 模式、Settings 面板、语言切换 |
+> | v0.1 | 2026-03 | 初始版本，OS 桌面、Supabase Auth、双模式切换 |
+
+---
+
 ## 1. System Architecture
 
 ```
@@ -25,32 +34,58 @@ The app has two rendering modes managed by `AppContext`:
 
 | Mode | Component | Description |
 |---|---|---|
-| `os` | `Desktop.tsx` | OS-style desktop, draggable windows, icon grid |
-| `web` | `AppShell.tsx` | Traditional sidebar + main content layout |
+| `os` | `Desktop.tsx` | OS-style desktop, draggable/resizable windows, icon grid |
+| `web` | `AppShell.tsx` | Traditional collapsible sidebar + main content layout |
 
 Mode state lives in `PageClient.tsx` via `AppProvider`. Switching is instant with no page reload.
+Both modes are accessible without login (guest-friendly).
 
 ### Global State (`lib/appContext.tsx`)
 
 ```ts
 interface AppCtx {
-  lang: 'zh' | 'en'      // default: 'en'
-  theme: 'light' | 'dark' // default: 'light'
-  mode: 'os' | 'web'      // default: 'os'
+  lang: 'zh' | 'en'       // default: 'en'
+  theme: 'light' | 'dark'  // default: 'light'
+  mode: 'os' | 'web'       // default: 'os'
 }
 ```
 
 Theme is applied via `data-theme` attribute on `<html>`, driven by CSS custom properties.
 
-### Desktop OS UI
+### Knowledge OS Navigation (v0.3)
 
-- Icons on the left column, draggable via `@use-gesture/react` + `@react-spring/web`
-- Double-click icon → opens a draggable, stackable window
+Five top-level modules replacing the old task/profile/group demo content:
+
+| ID | ZH | EN | Layer |
+|---|---|---|---|
+| `frontier` | 前沿探索 | Frontier | Tag system (maturity/certainty/freshness/type) |
+| `applications` | 应用落地 | Applications | Capability × Domain matrix |
+| `agents` | 智能体 | Agents | Decision layer (no execution logic) |
+| `execution` | 执行层 | Execution | Orchestration, Context, Harness Engineering, Observability |
+| `ai-infra` | AI基础设施 | AI Infra | Foundations, Systems, Hardware, Resources |
+
+Architecture rule: `AI Infrastructure → Execution → Agents → Applications`. Frontier is a tag system, not a layer.
+
+### Desktop OS UI (v0.3 updates)
+
+- Icons on the left column, draggable via `@use-gesture/react`
+- Double-click icon → opens a draggable, **resizable** window
+- Window resize: 8 handles (4 edges + 4 corners), min size 280×180px
+- Window size/position stored in local `useState` — survives parent re-renders
 - Window titlebar: drag to move, double-click to maximize/restore
 - Traffic-light buttons: red = close, yellow = minimize, green = maximize
 - Minimized windows appear in a bottom taskbar
-- Settings panel: fixed bottom-left (Windows Start style), click outside to dismiss
-- Language dropdown: top-right, click outside to dismiss
+- Settings panel: fixed bottom-left, includes account info + sign-out
+- Mode toggle (OS/Web) removed from top nav → moved into Settings panel
+
+### Web Mode UI (v0.3 updates)
+
+- Collapsible sidebar: 180px expanded → 56px icon-only, toggle button in header
+- Sidebar header height matches top nav (48px) for visual alignment
+- Light color scheme matching `var(--card)` / `var(--surface)` — no dark sidebar
+- Top nav: theme toggle + language toggle only (mode toggle in user menu)
+- User menu (click avatar, bottom-left): mode switch + sign-out
+- Guest-accessible: shows login button when not authenticated
 
 ### Auth Flow
 
@@ -62,7 +97,7 @@ User clicks "Get Started"
   → Supabase exchanges code for session
   → Redirect to /
   → page.tsx reads session server-side
-  → Renders Desktop with user prop
+  → Renders Desktop/AppShell with user prop
 ```
 
 ## 3. Directory Structure
@@ -76,30 +111,42 @@ frontend/
 │   └── auth/callback/route.ts  # OAuth callback handler
 ├── components/
 │   ├── PageClient.tsx          # AppProvider wrapper + mode router
-│   ├── Desktop.tsx             # Full OS desktop implementation
-│   ├── AppShell.tsx            # Web mode layout
+│   ├── Desktop.tsx             # Full OS desktop (icons, windows, resize)
+│   ├── AppShell.tsx            # Web mode (collapsible sidebar + pages)
 │   └── DraggableCard.tsx       # Standalone draggable card (utility)
 └── lib/
     ├── appContext.tsx           # React context: lang/theme/mode
     └── supabase/
         ├── client.ts           # Browser Supabase client
         └── server.ts           # Server-side Supabase client (cookies)
+
+db/
+├── schema.sql                  # PostgreSQL schema (nodes/edges/tags/content/resources)
+├── import.py                   # Content import script (node.json + HTML files)
+└── content/
+    └── harness-engineering/    # Example node with concept/guide/failure HTML
 ```
 
-## 4. Backend Architecture
+## 4. Database Schema (v0.3)
+
+Full schema in `db/schema.sql`. Key tables:
+
+| Table | Purpose |
+|---|---|
+| `nodes` | Knowledge nodes (layer, sub_layer, maturity, certainty, freshness, type) |
+| `edges` | Directed relationships (depends_on / extends / replaces / uses / related_to) |
+| `tags` | Frontier tag system (maturity / certainty / freshness / type categories) |
+| `node_tags` | Many-to-many node ↔ tag |
+| `content` | HTML content per node (concept / guide / playbook / case_study / failure) |
+| `resources` | External resources (datasets / repos / tools / benchmarks) |
+
+Layer values: `AI Infrastructure` | `Execution` | `Agents` | `Applications`
+
+## 5. Backend Architecture
 
 ### Python FastAPI (`backend/python/`)
 
 Handles all main application data. Currently mock data, designed for easy swap to real DB.
-
-```
-main.py
-├── GET  /api/profile        → Profile model
-├── GET  /api/tasks          → Task[] model
-├── POST /api/tasks/{id}/complete
-├── GET  /api/group          → GroupMember[] model
-└── GET  /api/stats          → date/weekday/day_num
-```
 
 ### Go Gin (`backend/go/`)
 
@@ -108,19 +155,12 @@ Handles the AI knowledge graph with pgvector support for future semantic search.
 ```
 cmd/server/main.go
 internal/
-├── handler/pathway.go    → HTTP handlers
-├── model/node.go         → Node, Lineage structs
+├── handler/pathway.go      → HTTP handlers
+├── model/node.go           → Node, Lineage structs
 └── repository/node_repo.go → pgx database queries
 ```
 
-### Database Schema (`migrations/001_init.sql`)
-
-Key tables:
-- `nodes` — AI knowledge nodes (id, name, description, maturity, status)
-- `lineages` — directed edges between nodes (parent → child)
-- pgvector extension enabled for future embedding search
-
-## 5. Styling System
+## 6. Styling System
 
 No CSS framework. All styles in `globals.css` using CSS custom properties.
 
@@ -129,8 +169,8 @@ No CSS framework. All styles in `globals.css` using CSS custom properties.
 ```css
 --ink: #1a1a2e          /* primary text */
 --teal: #048a81         /* brand accent */
---surface: #fdf8f0      /* desktop background (cream) */
---card: #ffffff
+--surface: #f8f8fc      /* page/content background */
+--card: #ffffff         /* sidebar, window, card background */
 --border: #e8e8f0
 ```
 
@@ -148,7 +188,7 @@ Dark mode overrides via `[data-theme="dark"]` selector.
 
 Neo-brutalism style: `2px solid #1a1a2e` border + `6px 6px 0 #1a1a2e` offset shadow.
 
-## 6. Deployment
+## 7. Deployment
 
 ### Docker Compose Services
 
@@ -167,16 +207,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Go backend (`DATABASE_URL` env or `.env`):
-```env
-DATABASE_URL=postgres://user:password@host:5432/soarai
-ALLOWED_ORIGIN=http://localhost:3000
-```
-
 ### Production Notes
 
 - Frontend uses `output: 'standalone'` for minimal Docker image
 - Auth uses Supabase cloud — no local DB needed for login/session
 - Local PostgreSQL (in `docker-compose.yml`) is for the Go knowledge graph service only
-- `backend/python` is currently mock data; swap `main.py` routes to real DB queries when ready
 - Set `ALLOWED_ORIGIN` in Go backend to your production domain before deploying

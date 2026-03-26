@@ -1,92 +1,126 @@
 # Requirements — Soar AI
 
+> **版本历史**
+> | 版本 | 日期 | 变更摘要 |
+> |------|------|---------|
+> | v0.3 | 2026-03-26 | 产品定位转型为 AI Knowledge OS；五层知识体系替代任务/打卡 demo |
+> | v0.2 | 2026-03 | 双模式切换、i18n、Settings 面板 |
+> | v0.1 | 2026-03 | 初始版本，任务系统、打卡、成长档案 |
+
+---
+
 ## 1. Background
 
-Soar AI (起飞AI) is an AI transformation OS for professionals. The core insight: most people know AI tools exist but haven't integrated them into their actual workflow. Soar AI solves this through daily micro-tasks, accountability groups, and progress tracking — not tutorials or tool lists.
+Soar AI (起飞AI) is an **AI Knowledge OS** — a structured knowledge system for AI practitioners and professionals who want to understand and apply AI at depth.
 
-Target users: product managers, designers, analysts, consultants — knowledge workers who want to stay relevant as AI reshapes their roles.
+The core insight: AI knowledge is fragmented across papers, blogs, and tools. Soar AI organizes it into a layered architecture (Infrastructure → Execution → Agents → Applications) with a Frontier tag system for tracking maturity and relevance.
 
-## 2. Core Features
+Target users: AI engineers, product managers, researchers, and knowledge workers building AI-powered systems.
 
-### 2.1 Daily Task System
+## 2. Knowledge Architecture
 
-- One task per day, completable in 5–10 minutes
-- Tasks are role-specific (PM, designer, analyst, etc.)
-- Each task includes: title, tags, estimated time, required tools, step-by-step instructions
-- Mark complete → updates streak counter and total task count
-- Monthly calendar view showing completed / today / future days
+### 2.1 Four-Layer Model
 
-### 2.2 AI Readiness Score
+```
+AI Infrastructure → Execution → Agents → Applications
+```
 
-- Baseline score from onboarding assessment
-- Score updates as tasks are completed
-- Ring chart visualization with score history
-- Comparison against peers in same industry/role
+| Layer | Role | Key Concepts |
+|---|---|---|
+| AI Infrastructure | Capability source | Transformer, MoE, vLLM, KV Cache, Datasets |
+| Execution | Core runtime | Orchestration, RAG, Harness Engineering, Observability |
+| Agents | Decision logic | Planning, ReAct, Multi-Agent, Cognitive Modeling |
+| Applications | Use cases | Capability × Domain matrix |
 
-### 2.3 Growth Profile
+**Rule**: Each node belongs to exactly one layer. Cross-layer relationships expressed via `edges` table.
 
-- 4-stage transformation timeline: Observer → Daily User → Collaborator → AI-Enhanced Expert
-- Unlockable skill tags (e.g. "Prompt Design", "Meeting Notes", "Data Analysis")
-- Joined days counter, streak records
+### 2.2 Frontier Tag System
 
-### 2.4 Group System
+Frontier is a **tag system**, not a layer. Tags classify nodes by:
 
-- 5-person accountability groups
-- Weekly leaderboard by streak length
-- Activity feed: achievements, warnings for inactive members
-- Weekly dot grid showing each member's 5-day completion
+| Dimension | Values |
+|---|---|
+| maturity | foundation / mainstream / emerging / speculative |
+| certainty | validated / experimental / speculative |
+| freshness | new / trending / stable |
+| type | research / paradigm / system / application |
 
-### 2.5 Quarterly Report
+### 2.3 Content Types
 
-- Summary: tasks completed, score gain, percentile vs peers
-- Shareable report (future: PDF export, shareable link)
+Each node can have multiple content pieces:
+- `concept` — what it is
+- `guide` — how to use it
+- `playbook` — step-by-step workflow
+- `case_study` — real-world example
+- `failure` — common failure modes
 
-### 2.6 AI Evolution Path (Knowledge Graph)
+## 3. UI Requirements
 
-- Visual map of AI concepts from foundational to cutting-edge
-- Node maturity labels: Foundational / Mainstream / Emerging / Speculative
-- Lineage relationships (e.g. Prompt Engineering → Context Engineering → Harness Engineering)
-- "2026 New" highlight with breathing animation for latest concepts
-- Role-based filtering (developer / architect / PM)
+### 3.1 OS Mode (Desktop)
 
-### 2.7 OS Desktop UI
+- Icon grid on left, each icon opens a draggable window
+- Windows: drag to move, resize from any edge/corner (min 280×180px)
+- Maximize/minimize/close controls
+- Multiple windows open simultaneously, z-index stacking
+- Settings panel (bottom-left): language, theme, mode switch, account
 
-- Icon-based desktop with draggable windows
-- Double-click icon to open window
-- Multiple windows open simultaneously, stackable by z-index
-- Window controls: close / minimize / maximize (double-click titlebar)
-- Minimized windows in bottom taskbar
-- Draggable icons
+### 3.2 Web Mode (AppShell)
 
-### 2.8 Settings & Personalization
+- Collapsible sidebar (180px ↔ 56px icon-only)
+- Five navigation items matching the five modules
+- Top nav: theme + language toggles
+- User menu (avatar click): mode switch + sign-out
+- Guest-accessible without login
 
-- Language: English / 中文
-- Theme: Light / Dark
-- View mode: OS / Web
-- Settings panel: Windows Start-menu style, bottom-left
+### 3.3 Internationalization
 
-### 2.9 Authentication
+- Full EN/ZH switching for all UI text
+- Technical terms preserved in English (RAG, Transformer, ReAct, etc.)
+- Translatable: section titles, capability names, domain names, UI labels
+
+### 3.4 Authentication
 
 - Google OAuth via Supabase
-- Session persisted server-side (Next.js middleware)
-- Logged-in users get OS mode by default
-- Guest users can browse desktop but can't access personal data
+- Both modes accessible as guest
+- Logged-in users see account info and sign-out in user menu
 
-## 3. Non-Functional Requirements
+## 4. Data Requirements
+
+### 4.1 Node Schema
+
+```sql
+nodes (id, name, slug, layer, sub_layer, description,
+       capabilities[], domains[], maturity, certainty,
+       freshness, type, cost, created_at, updated_at)
+```
+
+### 4.2 Content Import
+
+- Content stored as HTML files in `db/content/<slug>/`
+- `node.json` defines node metadata
+- `import.py` script reads directory and writes to Supabase
+
+### 4.3 Graph Queries
+
+- Dependency query: `edges WHERE from_node = X AND relation_type = 'depends_on'`
+- Related query: all edges from a node
+
+## 5. Non-Functional Requirements
 
 | Requirement | Target |
 |---|---|
 | First load | < 2s on broadband |
 | Auth redirect | < 3s round-trip |
-| Animation | 60fps drag interactions |
-| Accessibility | Keyboard navigable windows |
+| Animation | 60fps drag/resize interactions |
+| Mode switch | Instant, no page reload |
 | Security | `.env.local` never committed; Supabase RLS for user data |
 | Deployment | Single `docker-compose up` for full stack |
 
-## 4. Out of Scope (v1)
+## 6. Out of Scope (current)
 
 - Mobile / responsive layout (desktop-first)
-- Real-time group chat
-- PDF report export
-- AI-generated personalized tasks
+- Real-time collaboration
+- AI-generated content
 - Payment / subscription
+- Recommendation system
+- Neo4j or complex GraphQL

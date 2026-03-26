@@ -1,91 +1,86 @@
 # Roadmap — Soar AI
 
-## Current State (v0.1 — March 2026)
-
-### Done
-- [x] Next.js 14 App Router frontend
-- [x] Supabase Google OAuth login (Google provider)
-- [x] OS-style desktop: draggable icons, stackable windows, maximize/minimize
-- [x] Window titlebar: double-click to maximize, traffic-light controls
-- [x] Bottom taskbar for minimized windows
-- [x] Light / Dark theme (CSS custom properties, `data-theme` on `<html>`)
-- [x] EN / ZH language switching (dropdown, click-outside to close)
-- [x] OS ↔ Web mode toggle (via AppContext)
-- [x] Settings panel: Windows Start-menu style, fixed bottom-left, click-outside to dismiss
-- [x] `home.mdx` auto-opens on desktop load (product landing page)
-- [x] "Get Started" / "立即开始" login button in top-right nav
-- [x] "Soar AI" logo in Playfair Display italic (EN), Noto Serif SC (ZH)
-- [x] AppShell web layout (sidebar + main content)
-- [x] Mock data: profile, tasks, group, stats
-- [x] Python FastAPI backend skeleton (mock data, port 8000)
-- [x] Go Gin backend skeleton (knowledge graph, port 8080)
-- [x] Docker Compose 4-service setup (db / api / pathway / frontend)
-- [x] PostgreSQL schema with pgvector + seed data (8 AI evolution nodes)
-
-### Known gaps
-- [ ] `completeTask` still calls real backend — will 500 if Python not running
-- [ ] All data is mock — no real DB reads/writes
-- [ ] No user-specific data (everyone sees same mock profile)
+> **版本历史**
+> | 版本 | 日期 | 变更摘要 |
+> |------|------|---------|
+> | v0.3 | 2026-03-26 | AI Knowledge OS v4 重构完成 |
+> | v0.2 | 2026-03 | 双模式、i18n、Settings |
+> | v0.1 | 2026-03 | 初始版本 |
 
 ---
 
-## v0.2 — Real Data Layer (Q2 2026)
+## ✅ v0.3 — AI Knowledge OS (2026-03-26 完成)
 
-- [ ] Connect Python backend to Supabase PostgreSQL
-- [ ] User-specific profile stored in DB (linked to Supabase auth UID)
-- [ ] Tasks stored and served from DB
-- [ ] Task completion persisted per user
-- [ ] Group membership and leaderboard from DB
-- [ ] Replace mock `completeTask` with real API call
+### 前端
+- [x] 五层知识导航：Frontier / Applications / Agents / Execution / AI Infrastructure
+- [x] 中英文完整翻译（技术术语保留英文）
+- [x] OS 模式窗口支持自定义缩放（8个 resize handle，min 280×180px）
+- [x] 窗口尺寸持久化（打开新窗口不重置已缩放的窗口）
+- [x] Web 模式侧边栏可收缩（180px ↔ 56px）
+- [x] Web 模式浅色风格统一（sidebar + page 同色系）
+- [x] 模式切换移入用户菜单（头像点击弹出）
+- [x] OS/Web 模式对访客开放（无需登录）
+- [x] 右上角控件位置固定（切换模式不晃动）
 
----
-
-## v0.3 — Knowledge Graph (Q2–Q3 2026)
-
-- [ ] Go backend: seed initial AI pathway nodes (Prompt → Context → Harness Engineering)
-- [ ] Frontend: interactive pathway visualization (SVG or canvas)
-- [ ] Tech Radar view (circular, distance = maturity)
-- [ ] Role-based node filtering
-- [ ] Admin panel: add new nodes, define lineage relationships
-- [ ] pgvector: embed node descriptions for semantic search
+### 数据库
+- [x] PostgreSQL schema：nodes / edges / tags / node_tags / content / resources
+- [x] 内容导入脚本 `db/import.py`
+- [x] 示例节点：Harness Engineering（concept + guide + failure）
 
 ---
 
-## v0.4 — Mobile & PWA (Q3 2026)
+## v0.4 — 内容填充 (Q2 2026)
 
-- [ ] Responsive layout for mobile (Web mode only on small screens)
-- [ ] PWA manifest + service worker for offline task viewing
-- [ ] Push notifications for daily task reminder
-
----
-
-## v0.5 — AI Integration (Q3–Q4 2026)
-
-- [ ] LLM-powered task feedback evaluation
-- [ ] Personalized task generation based on user profile + history
-- [ ] In-window AI assistant (floating chat within task window)
-- [ ] Auto-generate quarterly report narrative with LLM
+- [ ] 为五个模块填充真实节点数据（每层 5–10 个核心节点）
+- [ ] 运行 `import.py` 写入 Supabase
+- [ ] 前端从 Supabase 读取节点数据（替换硬编码内容）
+- [ ] 节点详情页：点击 tag 展开 concept/guide/failure 内容
+- [ ] 节点间关系可视化（edges 表）
 
 ---
 
-## v1.0 — Social & Enterprise (Q4 2026)
+## v0.5 — 知识图谱交互 (Q2–Q3 2026)
 
-- [ ] Group chat within accountability groups
-- [ ] Achievement badges with unlock animations
-- [ ] Shareable quarterly report (public URL + PDF)
-- [ ] Enterprise dashboard: team-level AI readiness view
-- [ ] Subscription / payment integration
+- [ ] Go 后端：节点 API（按 layer 查询、按 slug 查询）
+- [ ] 前端：交互式图谱视图（SVG/canvas，节点 + 边）
+- [ ] Tech Radar 视图（圆形，距离 = maturity）
+- [ ] 节点搜索（全文 + pgvector 语义搜索）
+- [ ] Admin 面板：添加节点、定义关系
+
+---
+
+## v0.6 — 个人化 (Q3 2026)
+
+- [ ] 用户收藏节点
+- [ ] 学习进度追踪（已读 / 已掌握）
+- [ ] 个人知识地图（基于收藏和进度）
+- [ ] 推荐下一个节点（基于当前层级和关系）
+
+---
+
+## v0.7 — Mobile & PWA (Q3 2026)
+
+- [ ] Web 模式响应式布局（移动端自动切换）
+- [ ] PWA manifest + service worker
+- [ ] 离线内容缓存
+
+---
+
+## v1.0 — 协作与企业 (Q4 2026)
+
+- [ ] 团队知识库（共享节点集合）
+- [ ] 企业 AI 就绪度评估
+- [ ] 订阅 / 付费内容
+- [ ] 可分享的知识地图（公开 URL）
 
 ---
 
 ## Infrastructure Scaling Triggers
 
-Add these when the 3-service setup (frontend + api + db) is no longer enough:
-
 | When | Add |
 |---|---|
-| Task generation is async / slow | Celery worker + Redis queue |
-| Static assets need CDN | Nginx reverse proxy, frontend as build artifact |
-| Session/rate-limit caching | Redis cache layer |
-| High-volume event tracking | Message queue (RabbitMQ / Kafka) |
-| Vector search at scale | Dedicated pgvector replica or Qdrant |
+| 内容量 > 1000 节点 | 全文搜索索引（pg_trgm 或 Meilisearch） |
+| 语义搜索需求 | pgvector 或 Qdrant |
+| 静态资源 CDN | Nginx 反向代理 |
+| 高并发 | Redis 缓存层 |
+| 异步任务 | Celery + Redis queue |
