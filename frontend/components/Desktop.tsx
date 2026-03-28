@@ -308,7 +308,7 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
 
   const ICONS: DesktopIcon[] = [
     { id: 'frontier', label: t('前沿探索', 'Frontier'), icon: <Telescope size={22} color="#fff" />, color: '#1a1a2e', content: <SharedDocView pageId="frontier" inOS={true} />, defaultW: 900, defaultH: 600 },
-    { id: 'applications', label: t('应用落地', 'Applications'), icon: <LayoutGrid size={22} color="#fff" />, color: '#5b4fcf', content: <SharedDocView pageId="applications" inOS={true} />, defaultW: 900, defaultH: 600 },
+    { id: 'applications', label: t('应用方案', 'Applications'), icon: <LayoutGrid size={22} color="#fff" />, color: '#5b4fcf', content: <SharedDocView pageId="applications" inOS={true} />, defaultW: 900, defaultH: 600 },
     { id: 'execution', label: t('工程化', 'Engineering'), icon: <Cpu size={22} color="#fff" />, color: '#d4890a', content: <SharedDocView pageId="execution" inOS={true} />, defaultW: 900, defaultH: 600 },
     { id: 'agents', label: t('智能体', 'Agents'), icon: <Bot size={22} color="#fff" />, color: '#048a81', content: <SharedDocView pageId="agents" inOS={true} />, defaultW: 900, defaultH: 600 },
     { id: 'ai-infra', label: t('AI基础设施', 'AI Infra'), icon: <Server size={22} color="#fff" />, color: '#00a8cc', content: <SharedDocView pageId="ai-infra" inOS={true} />, defaultW: 900, defaultH: 600 },
