@@ -26,7 +26,7 @@ export const NAV_ITEMS = [
   { id: 'applications', zhLabel: '应用方案', enLabel: 'Applications', icon: LayoutGrid },
   { id: 'execution', zhLabel: '工程化', enLabel: 'Engineering', icon: Cpu },
   { id: 'agents', zhLabel: '智能体', enLabel: 'Agents', icon: Bot },
-  { id: 'ai-infra', zhLabel: 'AI基础设施', enLabel: 'AI Infra', icon: Server },
+  { id: 'ai-infra', zhLabel: '基础设施', enLabel: 'AI Infra', icon: Server },
 ] as const
 
 export type PageId = typeof NAV_ITEMS[number]['id']
