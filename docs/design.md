@@ -3,6 +3,7 @@
 > **版本历史**
 > | 版本 | 日期 | 变更摘要 |
 > |------|------|---------|
+> | v0.4 | 2026-03-28 | MDX Content Engine, SharedDocView unifying Web/OS doc rendering, Global LangDropdown |
 > | v0.3 | 2026-03-26 | AI Knowledge OS v4 架构重构：五层导航、i18n 完善、Web 模式重写、OS 窗口缩放 |
 > | v0.2 | 2026-03 | AppShell web 模式、Settings 面板、语言切换 |
 > | v0.1 | 2026-03 | 初始版本，OS 桌面、Supabase Auth、双模式切换 |
@@ -86,6 +87,14 @@ Architecture rule: `AI Infrastructure → Execution → Agents → Applications`
 - Top nav: theme toggle + language toggle only (mode toggle in user menu)
 - User menu (click avatar, bottom-left): mode switch + sign-out
 - Guest-accessible: shows login button when not authenticated
+
+### Content System (v0.4 updates)
+
+The previous hardcoded `TOPIC_CONTENT` dictionary in AppShell has been replaced with a file-system driven **MDX Architecture**.
+- Content lives in `frontend/content/` organized by layer and module (e.g. `execution/rag/conceptual.mdx`).
+- `SharedDocView.tsx` handles dynamic fetching via `/api/content`, reading MDX, generating dynamic TOCs, and rendering custom components (like `<RagConceptual />`).
+- OS Mode (`Desktop.tsx`) and Web Mode (`AppShell.tsx`) both mount `SharedDocView`, ensuring 100% parity in content rendering, layout, and component interactivity without dropping out of the desktop window experience.
+- All language toggles are unified using `LangDropdown.tsx` with Globe icons.
 
 ### Auth Flow
 

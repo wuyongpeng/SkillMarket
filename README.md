@@ -25,6 +25,7 @@ The UI is an OS-style desktop: double-click icons to open draggable windows, swi
 |---|---|
 | Frontend | Next.js 14 (App Router) + TypeScript |
 | Styling | Vanilla CSS (no Tailwind) |
+| Content | MDX (`next-mdx-remote`) |
 | Auth | Supabase (Google OAuth) |
 | Drag & Animation | `@use-gesture/react` + `@react-spring/web` |
 | Main API | Python FastAPI — port 8000 |
@@ -43,12 +44,16 @@ SkillMarket/
 │   │   ├── layout.tsx
 │   │   ├── page.tsx           # Server component, reads Supabase session
 │   │   ├── globals.css
+│   │   ├── api/content/       # MDX fetch API route
 │   │   └── auth/callback/     # Supabase OAuth callback
 │   ├── components/
 │   │   ├── PageClient.tsx     # Mode router (OS ↔ Web)
 │   │   ├── Desktop.tsx        # OS-style desktop with draggable windows
 │   │   ├── AppShell.tsx       # Web mode sidebar layout
+│   │   ├── SharedDocView.tsx  # Universal MDX document viewer
+│   │   ├── LangDropdown.tsx   # Global language toggle
 │   │   └── DraggableCard.tsx  # Reusable draggable card
+│   ├── content/               # MDX content files for knowledge base
 │   ├── lib/
 │   │   ├── appContext.tsx      # Global state: lang / theme / mode
 │   │   └── supabase/          # Supabase client & server helpers

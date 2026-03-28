@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '帆布AI | AI Knowledge OS',
+  title: '帆图 | AI Knowledge OS',
   description: '帮助职场人系统化地将 AI 工具融入日常工作流',
 }
 

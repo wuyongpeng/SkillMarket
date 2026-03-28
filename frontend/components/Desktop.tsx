@@ -1,5 +1,7 @@
 'use client'
 
+import SharedDocView from './SharedDocView'
+import LangDropdown from './LangDropdown'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { useSpring, animated } from '@react-spring/web'
@@ -195,13 +197,13 @@ function SettingsPanel({ onClose, user }: { onClose: () => void; user?: import('
         <button className="settings-close" onClick={onClose}><X size={14} /></button>
       </div>
 
-      <div className="settings-section">{t('语言 / Language', 'Language')}</div>
+      <div className="settings-section">{lang === 'zh' ? '语言' : 'Language'}</div>
       <div className="settings-row">
         <button className={`settings-opt ${lang === 'zh' ? 'active' : ''}`} onClick={() => setLang('zh')}>
-          🇨🇳 中文
+          简体中文
         </button>
         <button className={`settings-opt ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>
-          🇺🇸 English
+          English
         </button>
       </div>
 
@@ -248,184 +250,8 @@ function SettingsPanel({ onClose, user }: { onClose: () => void; user?: import('
   )
 }
 
-/* ── FRONTIER ── */
-function FrontierContent() {
-  const { t } = useApp()
-  const tags = [
-    {
-      label: t('新兴范式', 'Emerging'),
-      color: '#5b4fcf',
-      items: ['Mixture of Experts', 'Speculative Decoding', 'Test-Time Compute'],
-    },
-    {
-      label: t('主流应用', 'Mainstream'),
-      color: '#048a81',
-      items: ['RAG', 'Function Calling', 'Fine-tuning'],
-    },
-    {
-      label: t('基础理论', 'Foundation'),
-      color: '#888',
-      items: ['Transformer', 'Backpropagation', 'Tokenization'],
-    },
-  ]
-  return (
-    <div className="wc-today" style={{ padding: '20px' }}>
-      <div className="wc-section-label">{t('前沿探索', 'Frontier')}</div>
-      {tags.map(g => (
-        <div key={g.label as string} style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: g.color, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{g.label}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {g.items.map(item => (
-              <span key={item} className="wc-tag" style={{ borderColor: g.color, color: g.color }}>{item}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-      <div style={{ marginTop: 16, padding: '10px 12px', background: 'var(--surface)', borderRadius: 8, fontSize: 11, color: 'var(--muted)' }}>
-        {t('成熟度 · 确定性 · 新鲜度 · 类型', 'maturity · certainty · freshness · type')}
-      </div>
-    </div>
-  )
-}
+import { TOPICS, type PageId } from './AppShell'
 
-/* ── APPLICATIONS ── */
-function ApplicationsContent() {
-  const { t } = useApp()
-  const matrix = [
-    { cap: t('生成', 'Generate'),   domains: [t('编程', 'Coding'), t('营销', 'Marketing'), t('教育', 'Education')] },
-    { cap: t('分析', 'Analyze'),    domains: [t('金融', 'Finance'), t('医疗', 'Healthcare'), t('通用', 'General')] },
-    { cap: t('决策', 'Decide'),     domains: [t('金融', 'Finance'), t('通用', 'General')] },
-    { cap: t('执行', 'Act'),        domains: [t('编程', 'Coding'), t('通用', 'General')] },
-    { cap: t('沟通', 'Communicate'), domains: [t('营销', 'Marketing'), t('教育', 'Education')] },
-  ]
-  return (
-    <div className="wc-today" style={{ padding: '20px' }}>
-      <div className="wc-section-label">{t('应用落地', 'Applications')}</div>
-      {matrix.map(row => (
-        <div key={row.cap as string} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div style={{ width: 90, fontSize: 12, fontWeight: 600, color: 'var(--ink)', flexShrink: 0 }}>{row.cap}</div>
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {(row.domains as string[]).map(d => (
-              <span key={d} className="wc-tag" style={{ fontSize: 10 }}>{d}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── AGENTS ── */
-function AgentsContent() {
-  const { t } = useApp()
-  const sections = [
-    {
-      title: t('决策系统', 'Decision Systems'),
-      items: [t('规划', 'Planning'), t('推理', 'Reasoning'), t('反思', 'Reflection')],
-    },
-    {
-      title: t('架构模式', 'Architectures'),
-      items: ['ReAct', 'Plan-Execute', 'Tree of Thought', 'Self-Refine'],
-    },
-    {
-      title: t('多智能体', 'Multi-Agent'),
-      items: [t('群体协作', 'Swarm'), t('角色分工', 'Role-based'), t('层级结构', 'Hierarchy')],
-    },
-    {
-      title: t('认知建模', 'Cognitive'),
-      items: [t('信念建模', 'Belief Modeling'), t('上下文建模', 'Context Modeling')],
-    },
-  ]
-  return (
-    <div className="wc-today" style={{ padding: '20px' }}>
-      <div className="wc-section-label">{t('智能体', 'Agents')}</div>
-      {sections.map(s => (
-        <div key={s.title as string} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 5 }}>{s.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── EXECUTION ── */
-function ExecutionContent() {
-  const { t } = useApp()
-  const sections = [
-    {
-      title: t('编排', 'Orchestration'),
-      items: [t('工作流', 'Workflow'), 'DAG', t('事件驱动', 'Event')],
-    },
-    {
-      title: t('上下文系统', 'Context Systems'),
-      items: ['RAG', 'Embeddings', 'Vector DB', t('记忆', 'Memory')],
-    },
-    {
-      title: t('驭控工程', 'Harness Engineering'),
-      items: [t('评估', 'Evaluation'), t('反馈循环', 'Feedback Loop'), t('自动调试', 'Auto Debug'), t('约束', 'Constraints')],
-    },
-    {
-      title: t('可观测性', 'Observability'),
-      items: [t('日志', 'Logging'), t('链路追踪', 'Tracing'), t('监控', 'Monitoring'), t('成本', 'Cost')],
-    },
-    {
-      title: t('可靠性', 'Reliability'),
-      items: [t('重试', 'Retry'), t('降级', 'Fallback'), 'Guardrails', t('恢复', 'Recovery')],
-    },
-  ]
-  return (
-    <div className="wc-today" style={{ padding: '20px' }}>
-      <div className="wc-section-label">{t('执行层', 'Execution')}</div>
-      {sections.map(s => (
-        <div key={s.title as string} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#048a81', marginBottom: 5 }}>{s.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── AI INFRASTRUCTURE ── */
-function AIInfraContent() {
-  const { t } = useApp()
-  const sections = [
-    {
-      title: t('基础理论', 'Foundations'),
-      items: ['Transformer', 'MoE', 'Diffusion', 'Backprop', 'Scaling Law', 'Tokenization'],
-    },
-    {
-      title: t('系统', 'Systems'),
-      items: ['vLLM', 'KV Cache', 'Quantization', t('分布式训练', 'Distributed Training'), 'Serverless'],
-    },
-    {
-      title: t('硬件', 'Hardware'),
-      items: ['GPU', 'NPU'],
-    },
-    {
-      title: t('资源', 'Resources'),
-      items: [t('数据集', 'Datasets'), t('基准测试', 'Benchmarks'), t('评估集', 'Eval Sets'), t('提示词库', 'Prompt Libraries'), 'Model Zoo'],
-    },
-  ]
-  return (
-    <div className="wc-today" style={{ padding: '20px' }}>
-      <div className="wc-section-label">{t('AI基础设施', 'AI Infra')}</div>
-      {sections.map(s => (
-        <div key={s.title as string} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 5 }}>{s.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-            {(s.items as string[]).map(item => <span key={item} className="wc-tag">{item}</span>)}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function LoginContent() {
   const { t } = useApp()
@@ -436,7 +262,7 @@ function LoginContent() {
   }
   return (
     <div className="wc-login">
-      <div className="wc-login-logo">帆布AI</div>
+      <div className="wc-login-logo">帆图</div>
       <div className="wc-login-title">{t('开始你的 AI 转型之旅', 'Start Your AI Transformation')}</div>
       <div className="wc-login-sub">{t('每日 5 分钟 · 小组打卡 · 成长档案', 'Daily 5min · Group check-in · Growth profile')}</div>
       <button className="wc-google-btn" onClick={handleLogin}>
@@ -448,57 +274,6 @@ function LoginContent() {
         </svg>
         {t('使用 Google 账号登录', 'Sign in with Google')}
       </button>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────
-   Language Dropdown
-───────────────────────────────────── */
-function LangDropdown() {
-  const { lang, setLang } = useApp()
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
-
-  const options = [
-    { value: 'zh', flag: '🇨🇳', label: '中文' },
-    { value: 'en', flag: '🇺🇸', label: 'English' },
-  ] as const
-
-  const current = options.find(o => o.value === lang)!
-
-  return (
-    <div className="lang-dropdown" ref={ref}>
-      <button className="nav-icon-btn lang-trigger" onClick={() => setOpen(o => !o)} title="Language">
-        <Languages size={15} />
-        <span className="lang-current">{current.flag}</span>
-      </button>
-      {open && (
-        <div className="lang-menu">
-          {options.map(o => (
-            <button
-              key={o.value}
-              className={`lang-option ${lang === o.value ? 'active' : ''}`}
-              onClick={() => { setLang(o.value); setOpen(false) }}
-            >
-              <span>{o.flag}</span>
-              <span>{o.label}</span>
-              {lang === o.value && <span className="lang-check">✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -532,13 +307,13 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
   }
 
   const ICONS: DesktopIcon[] = [
-    { id: 'frontier',     label: t('前沿探索', 'Frontier'),          icon: <Telescope size={22} color="#fff" />, color: '#1a1a2e', content: <FrontierContent />,     defaultW: 420, defaultH: 420 },
-    { id: 'applications', label: t('应用落地', 'Applications'),       icon: <LayoutGrid size={22} color="#fff" />, color: '#5b4fcf', content: <ApplicationsContent />, defaultW: 400, defaultH: 360 },
-    { id: 'agents',       label: t('智能体', 'Agents'),               icon: <Bot size={22} color="#fff" />,        color: '#048a81', content: <AgentsContent />,       defaultW: 400, defaultH: 400 },
-    { id: 'execution',    label: t('执行层', 'Execution'),            icon: <Cpu size={22} color="#fff" />,        color: '#d4890a', content: <ExecutionContent />,    defaultW: 420, defaultH: 440 },
-    { id: 'ai-infra',     label: t('AI基础设施', 'AI Infra'),         icon: <Server size={22} color="#fff" />,     color: '#00a8cc', content: <AIInfraContent />,      defaultW: 420, defaultH: 420 },
+    { id: 'frontier',     label: t('前沿探索', 'Frontier'),          icon: <Telescope size={22} color="#fff" />, color: '#1a1a2e', content: <SharedDocView pageId="frontier" inOS={true} />,     defaultW: 900, defaultH: 600 },
+    { id: 'execution',    label: t('执行层', 'Execution'),            icon: <Cpu size={22} color="#fff" />,        color: '#d4890a', content: <SharedDocView pageId="execution" inOS={true} />,    defaultW: 900, defaultH: 600 },
+    { id: 'applications', label: t('应用落地', 'Applications'),       icon: <LayoutGrid size={22} color="#fff" />, color: '#5b4fcf', content: <SharedDocView pageId="applications" inOS={true} />, defaultW: 900, defaultH: 600 },
+    { id: 'agents',       label: t('智能体', 'Agents'),               icon: <Bot size={22} color="#fff" />,        color: '#048a81', content: <SharedDocView pageId="agents" inOS={true} />,       defaultW: 900, defaultH: 600 },
+    { id: 'ai-infra',     label: t('AI基础设施', 'AI Infra'),         icon: <Server size={22} color="#fff" />,     color: '#00a8cc', content: <SharedDocView pageId="ai-infra" inOS={true} />,      defaultW: 900, defaultH: 600 },
     ...(!user ? [{ id: 'login', label: t('登录', 'Login'), icon: <LogIn size={22} color="#fff" />, color: '#1a1a2e', content: <LoginContent />, defaultW: 360, defaultH: 320 }] : []),
-  ]
+]
 
   const openWindow = useCallback((def: DesktopIcon) => {
     setWindows(prev => {
@@ -576,7 +351,7 @@ export default function Desktop({ user }: { user?: SupabaseUser | null }) {
       {/* Nav */}
       <nav className="desktop-nav">
         <div className={`desktop-logo ${lang === 'en' ? 'en' : ''}`}>
-          {lang === 'zh' ? '帆布AI' : 'Vela AI'}
+          {lang === 'zh' ? '帆图' : 'Vela AI'}
         </div>
         <div className="nav-right-controls">
           {!user && (
