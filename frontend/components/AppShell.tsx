@@ -200,27 +200,18 @@ export default function AppShell({ user }: { user: User | null }) {
             </button>
           </div>
 
-          {/* Nav links with category labels */}
-          {NAV_ITEMS.map((item, idx) => {
+          {/* Nav links */}
+          {NAV_ITEMS.map(item => {
             const Icon = item.icon
-            let sectionLabel = null
-            if (idx === 0) sectionLabel = lang === 'zh' ? '愿景 Vision' : 'Vision'
-            if (idx === 1) sectionLabel = lang === 'zh' ? '落地 Reality' : 'Reality'
-            if (idx === 3) sectionLabel = lang === 'zh' ? '内核 Core' : 'Core'
-
             return (
-              <Fragment key={item.id}>
-                {sectionLabel && !collapsed && (
-                  <div className="nav-section">{sectionLabel}</div>
-                )}
-                <button
-                  className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-                  onClick={() => { setActivePage(item.id); setSearchTargetTopic(null); setMobileSidebarOpen(false) }}
-                >
-                  <Icon size={16} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span>{lang === 'zh' ? item.zhLabel : item.enLabel}</span>}
-                </button>
-              </Fragment>
+              <button
+                key={item.id}
+                className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                onClick={() => { setActivePage(item.id); setSearchTargetTopic(null); setMobileSidebarOpen(false) }}
+              >
+                <Icon size={16} style={{ flexShrink: 0 }} />
+                {!collapsed && <span>{lang === 'zh' ? item.zhLabel : item.enLabel}</span>}
+              </button>
             )
           })}
 
@@ -263,7 +254,7 @@ export default function AppShell({ user }: { user: User | null }) {
             <div className="brand-block">
               <span className="brand-name">{lang === 'zh' ? '帆迹' : 'Vela AI'}</span>
               <span className="brand-slogan">
-                {lang === 'zh' ? 'AI系统化转型：从愿景到落地' : 'Systematic AI Transformation: From Vision to Reality'}
+                {lang === 'zh' ? '探索AI世界' : 'Explore AI World'}
               </span>
             </div>
           </div>
