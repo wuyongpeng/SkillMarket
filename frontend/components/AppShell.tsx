@@ -22,11 +22,11 @@ import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts'
 // 1 级导航
 // ------------------------------
 export const NAV_ITEMS = [
-  { id: 'frontier',     zhLabel: '前沿探索',   enLabel: 'Frontier',      icon: Telescope  },
-  { id: 'execution',    zhLabel: '执行层',     enLabel: 'Execution',     icon: Cpu        },
-  { id: 'applications', zhLabel: '应用落地',   enLabel: 'Applications',  icon: LayoutGrid },
-  { id: 'agents',       zhLabel: '智能体',     enLabel: 'Agents',        icon: Bot        },
-  { id: 'ai-infra',     zhLabel: 'AI基础设施', enLabel: 'AI Infra',      icon: Server     },
+  { id: 'frontier', zhLabel: '前沿探索', enLabel: 'Frontier', icon: Telescope },
+  { id: 'execution', zhLabel: '执行层', enLabel: 'Execution', icon: Cpu },
+  { id: 'applications', zhLabel: '应用落地', enLabel: 'Applications', icon: LayoutGrid },
+  { id: 'agents', zhLabel: '智能体', enLabel: 'Agents', icon: Bot },
+  { id: 'ai-infra', zhLabel: 'AI基础设施', enLabel: 'AI Infra', icon: Server },
 ] as const
 
 export type PageId = typeof NAV_ITEMS[number]['id']
@@ -36,28 +36,28 @@ export type PageId = typeof NAV_ITEMS[number]['id']
 // ------------------------------
 export const TOPICS = {
   'ai-infra': [
-    { id: 'transformer', zh: 'Transformer', en: 'Transformer', icon: Code,     descZh: '神经网络核心架构',   descEn: 'Core neural network architecture' },
-    { id: 'moe',         zh: 'MoE 架构',    en: 'MoE Architecture', icon: Bot, descZh: '混合专家稀疏模型',   descEn: 'Mixture of Experts sparse model' },
-    { id: 'embedding',   zh: 'Embedding',   en: 'Embedding',   icon: Bookmark, descZh: '文本/图像向量表示',   descEn: 'Text/image vector representation' },
-    { id: 'scaling',     zh: 'Scaling Law', en: 'Scaling Law', icon: BarChart, descZh: '模型性能缩放规律',   descEn: 'Model performance scaling rules' },
+    { id: 'transformer', zh: 'Transformer', en: 'Transformer', icon: Code, descZh: '神经网络核心架构', descEn: 'Core neural network architecture' },
+    { id: 'moe', zh: 'MoE 架构', en: 'MoE Architecture', icon: Bot, descZh: '混合专家稀疏模型', descEn: 'Mixture of Experts sparse model' },
+    { id: 'embedding', zh: 'Embedding', en: 'Embedding', icon: Bookmark, descZh: '文本/图像向量表示', descEn: 'Text/image vector representation' },
+    { id: 'scaling', zh: 'Scaling Law', en: 'Scaling Law', icon: BarChart, descZh: '模型性能缩放规律', descEn: 'Model performance scaling rules' },
   ],
   'agents': [
-    { id: 'react',    zh: 'ReAct',    en: 'ReAct',    icon: Bot,        descZh: '推理+行动协同架构',   descEn: 'Reasoning + acting architecture' },
-    { id: 'planning', zh: '规划系统', en: 'Planning', icon: LayoutGrid, descZh: '多步决策与目标分解',   descEn: 'Multi-step planning & decomposition' },
-    { id: 'memory',   zh: '记忆系统', en: 'Memory',   icon: Bookmark,   descZh: '长短时记忆管理',       descEn: 'Long/short-term memory management' },
+    { id: 'react', zh: 'ReAct', en: 'ReAct', icon: Bot, descZh: '推理+行动协同架构', descEn: 'Reasoning + acting architecture' },
+    { id: 'planning', zh: '规划系统', en: 'Planning', icon: LayoutGrid, descZh: '多步决策与目标分解', descEn: 'Multi-step planning & decomposition' },
+    { id: 'memory', zh: '记忆系统', en: 'Memory', icon: Bookmark, descZh: '长短时记忆管理', descEn: 'Long/short-term memory management' },
   ],
   'applications': [
     { id: 'generate', zh: '内容生成', en: 'Generation', icon: BookOpen, descZh: '文本/图像/音频生成', descEn: 'Text/image/audio generation' },
-    { id: 'decision', zh: '决策辅助', en: 'Decision',   icon: Bot,      descZh: '分析与判断增强',     descEn: 'Analysis & decision augmentation' },
+    { id: 'decision', zh: '决策辅助', en: 'Decision', icon: Bot, descZh: '分析与判断增强', descEn: 'Analysis & decision augmentation' },
   ],
   'execution': [
-    { id: 'orchestration', zh: '工作流编排', en: 'Orchestration', icon: LayoutGrid, descZh: 'DAG/状态机执行',   descEn: 'DAG / state machine execution' },
-    { id: 'observability', zh: '可观测性',   en: 'Observability', icon: BarChart,   descZh: '监控/追踪/日志',   descEn: 'Monitoring / tracing / logging' },
-    { id: 'rag',           zh: '检索增强生成', en: 'RAG',         icon: Database,   descZh: '检索外部知识增强生成', descEn: 'Retrieve external knowledge to enhance generation' },
+    { id: 'orchestration', zh: '工作流编排', en: 'Orchestration', icon: LayoutGrid, descZh: 'DAG/状态机执行', descEn: 'DAG / state machine execution' },
+    { id: 'observability', zh: '可观测性', en: 'Observability', icon: BarChart, descZh: '监控/追踪/日志', descEn: 'Monitoring / tracing / logging' },
+    { id: 'rag', zh: '检索增强生成', en: 'RAG', icon: Database, descZh: '检索外部知识增强生成', descEn: 'Retrieve external knowledge to enhance generation' },
   ],
   'frontier': [
-    { id: 'world-model', zh: '世界模型',  en: 'World Model',      icon: Globe, descZh: '物理与时空建模',     descEn: 'Physical & spatiotemporal modeling' },
-    { id: 'causal',      zh: '因果推理',  en: 'Causal Reasoning', icon: Bot,   descZh: '反事实与因果推断',   descEn: 'Counterfactual & causal inference' },
+    { id: 'world-model', zh: '世界模型', en: 'World Model', icon: Globe, descZh: '物理与时空建模', descEn: 'Physical & spatiotemporal modeling' },
+    { id: 'causal', zh: '因果推理', en: 'Causal Reasoning', icon: Bot, descZh: '反事实与因果推断', descEn: 'Counterfactual & causal inference' },
   ],
 }
 
@@ -127,7 +127,7 @@ export default function AppShell({ user }: { user: User | null }) {
     return results.slice(0, 6)
   }, [search])
 
-  const [dynamicToc, setDynamicToc] = useState<{id: string, text: string}[]>([])
+  const [dynamicToc, setDynamicToc] = useState<{ id: string, text: string }[]>([])
   const [mdxSource, setMdxSource] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const userRef = useRef<HTMLDivElement>(null)
@@ -249,7 +249,7 @@ export default function AppShell({ user }: { user: User | null }) {
         <div className="top-bar">
           <div className="top-bar-left">
             <div className="brand-block">
-              <span className="brand-name">{lang === 'zh' ? '帆图' : 'Vela AI'}</span>
+              <span className="brand-name">{lang === 'zh' ? '帆迹' : 'Vela AI'}</span>
               <span className="brand-slogan">
                 {lang === 'zh' ? '· 探索AI世界' : '– Explore AI World'}
               </span>

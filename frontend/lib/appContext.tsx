@@ -32,8 +32,8 @@ export function AppProvider({ children, defaultMode = 'web' }: { children: React
   }, [theme])
 
   useEffect(() => {
-    const title = lang === 'zh' 
-      ? '帆图 · 探索AI世界' 
+    const title = lang === 'zh'
+      ? '帆迹 · 探索AI世界'
       : 'Vela AI – Explore AI World'
     document.title = title
   }, [lang])
